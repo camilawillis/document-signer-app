@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import DIFLogin from '@/components/Auth/DIFLogin';
@@ -6,6 +7,7 @@ import DocumentSigner from '@/components/Admin/DocumentSigner';
 import HistorialFirmas from '@/components/Admin/HistorialFirmas';
 import RouteGuard from '@/components/Auth/RouteGuard';
 import Manual from '@/components/Admin/Manual';
+import QRReader from '@/components/Admin/QRReader';
 
 export default function App() {
   return (
@@ -32,6 +34,14 @@ export default function App() {
             </RouteGuard>
           } />
           <Route path="/manual" element={<Manual />} />
+
+          <Route path="/qr" element={
+            <RouteGuard>
+              <QRReader />
+            </RouteGuard>
+          } />
+          
+          
         </Routes>
       </AuthProvider>
     </Router>
