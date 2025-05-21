@@ -1,7 +1,7 @@
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { FileSignature, History, BookOpen } from 'lucide-react';
+import { FileSignature, History, BookOpen, ScanQrCode  } from 'lucide-react';
 
 export default function Dashboard() {
   const { usuario, logout } = useAuth();
@@ -46,16 +46,27 @@ export default function Dashboard() {
             </Button>
 
             {/* Botón manual centrado debajo */}
-            <div className="col-span-2 flex justify-center mt-4">
+            <div className="col-span-2 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Nueva grid anidada */}
               <Button 
                 onClick={() => navigate('/manual')} 
-                className="h-32 w-full md:w-1/2 flex flex-col items-center justify-center gap-3 hover:bg-blue-50 transition-colors"
+                className="h-32 flex flex-col items-center justify-center gap-3 hover:bg-blue-50 transition-colors"
               >
                 <BookOpen size={36} className="text-blue-600" />
                 <span className="text-lg font-medium">Manual de Usuario</span>
                 <span className="text-sm text-gray-500">Guía completa de uso</span>
               </Button>
+
+              <Button 
+                onClick={() => navigate('/qr')} 
+                className="h-32 flex flex-col items-center justify-center gap-3 hover:bg-blue-50 transition-colors"
+              >
+                <ScanQrCode size={36} className="text-blue-600" />
+                <span className="text-lg font-medium">Lector de QR</span>
+                <span className="text-sm text-gray-500">Comprueba la veracidad de documentos</span>
+              </Button>
             </div>
+          </div>
           </div>
         </div>
       </main>
