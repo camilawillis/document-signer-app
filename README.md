@@ -72,10 +72,9 @@ Sigue estos pasos para configurar el proyecto localmente:
 
 1.  **Clona el repositorio:**
     ```bash
-    git clone [URL_DEL_TU_REPOSITORIO]
-    cd digital-document-signer-app # Asume el nombre de la carpeta de tu proyecto
+    git clone https://github.com/Johannacam/document-signer-app # URL del repositorio
+    cd document-signer-app # Nombre de la carpeta de tu proyecto
     ```
-    *(Reemplaza `[URL_DEL_TU_REPOSITORIO]` con la URL real de tu repositorio en GitHub u otro servicio).*
 
 2.  **Instala las dependencias:**
     ```bash
