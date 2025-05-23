@@ -3,8 +3,7 @@
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Web Crypto API](https://img.shields.io/badge/Web%20Crypto%20API-30A3DC?style=for-the-badge&logo=webcomponents&logoColor=white)
-![Node.js]([https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white))
-
+![Node.js](https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white)
 ## Descripción
 
 Aplicación web para firmar y verificar documentos digitalmente utilizando la Web Crypto API del navegador. Permite a los usuarios generar pares de claves (pública/privada), firmar documentos PDF con su clave privada y verificar esas firmas usando la clave pública correspondiente. Las claves y el historial de documentos firmados se almacenan localmente en el navegador.
