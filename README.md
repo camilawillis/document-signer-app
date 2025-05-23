@@ -4,25 +4,32 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Web Crypto API](https://img.shields.io/badge/Web%20Crypto%20API-30A3DC?style=for-the-badge&logo=webcomponents&logoColor=white)
 ![Node.js](https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white)
+
 ## Descripción
 
-Aplicación web para firmar y verificar documentos digitalmente utilizando la Web Crypto API del navegador. Permite a los usuarios generar pares de claves (pública/privada), firmar documentos PDF con su clave privada y verificar esas firmas usando la clave pública correspondiente. Las claves y el historial de documentos firmados se almacenan localmente en el navegador.
+Aplicación web desarrollada como una demostración funcional para la firma y verificación digital de documentos. Utiliza la Web Crypto API nativa del navegador para gestionar pares de claves criptográficas y realizar operaciones de firma y verificación, asegurando la integridad y autenticidad de los documentos.
 
-Este proyecto es una demostración del uso de criptografía en el lado del cliente (browser) con RSA-PSS (SHA-512) para la firma digital.
+El proyecto está diseñado para simular un entorno de uso en instituciones como el DIF, donde el personal puede:
+* Generar sus propias claves para firmar documentos PDF.
+* Mantener un historial local de sus firmas.
+* Y, crucialmente, **verificar la veracidad de documentos físicos o digitales** mediante el escaneo de códigos QR incrustados que contienen el hash del documento.
+
+Este proyecto es una demostración del uso de criptografía en el lado del cliente (browser) con RSA-PSS (SHA-512) para la firma digital y su verificación.
 
 ## Características
 
-* **Generación de Claves:** Crea automáticamente un par de claves RSA-PSS (4096-bit, SHA-512) en el navegador para cada usuario (basado en el contexto de autenticación).
+* **Generación de Claves:** Crea automáticamente un par de claves RSA-PSS (4096-bit, SHA-512) en el navegador para cada usuario autenticado.
 * **Firma de Documentos:** Permite cargar un archivo PDF y firmarlo digitalmente utilizando la clave privada generada localmente.
-* **Verificación de Firma:** Verifica la autenticidad de una firma digital asociada a un documento (basado en el hash del contenido), utilizando la clave pública del firmante.
+* **Verificación de Firma (en Historial):** Verifica la autenticidad de una firma digital asociada a un documento (basado en el hash del contenido) utilizando la clave pública del firmante, al revisar el historial local.
+* **Lector de Código QR para Verificación:** Permite escanear códigos QR desde la cámara, una imagen local o un archivo PDF para extraer el hash de un documento. Este hash se compara con el historial local para verificar la veracidad y validez de la firma del documento.
 * **Gestión de Claves:**
     * Exporta la clave pública local en formato PEM.
     * Importa claves públicas de terceros (en formato PEM) para verificar sus firmas.
-* **Historial Local:** Mantiene un registro de los documentos firmados y sus detalles (nombre, fecha, tamaño, firmante, hash, firma, clave pública) en el `localStorage` del navegador.
-* **Estadísticas:** Muestra un resumen básico de la actividad de firma.
-* **Previsualización:** Permite ver los detalles de un documento firmado, incluyendo su hash, la firma digital y la clave pública asociada, facilitando la verificación.
-* **QR del Hash:** Genera un código QR que contiene el hash del documento para fácil identificación o vinculación.
-* **Control Básico de Roles:** Integrado con un contexto `useAuth` para determinar si un usuario tiene permisos de 'firmante'.
+* **Historial Local:** Mantiene un registro persistente de los documentos firmados y sus detalles (nombre, fecha, tamaño, firmante, hash, firma, clave pública) en el `localStorage` del navegador.
+* **Estadísticas:** Muestra un resumen básico de la actividad de firma en el panel principal.
+* **Previsualización Detallada:** Permite ver los metadatos completos de un documento firmado, su hash, la firma digital, la clave pública asociada y un código QR del hash para facilitar la verificación externa.
+* **Manual de Usuario Integrado:** Incluye una sección de manual de usuario dentro de la aplicación con información sobre el acceso, los procesos de firma y verificación, y consideraciones de seguridad.
+* **Control Básico de Roles:** Integrado con un contexto `useAuth` para simular permisos de usuario.
 
 ## Nota Importante de Seguridad
 
@@ -40,9 +47,15 @@ Este proyecto es una demostración del uso de criptografía en el lado del clien
 * [Lucide React](https://lucide.dev/icons/) (Iconos)
 * [React Router DOM](https://reactrouter.com/en/main) (Navegación)
 * [FileSaver.js](https://github.com/eligrey/FileSaver.js/) (Guardar archivos en el cliente)
+* [react-qr-scanner](https://www.npmjs.com/package/react-qr-scanner) (Lectura de QR con cámara)
+* [jsQR](https://www.npmjs.com/package/jsqr) (Detección de QR en imágenes)
+* [pdfjs-dist](https://mozilla.github.io/pdf.js/) (Renderizado de PDF para escaneo de QR)
 * Componentes UI (basados en `@/components/ui/card`, `@/components/ui/button`, etc., presumiblemente de una librería como [Shadcn/UI](https://ui.shadcn.com/) o similar)
-* API externa para QR: `https://api.qrserver.com/`
+* API externa para generación de QR: `https://api.qrserver.com/` (para QR de hash en la pantalla de previsualización)
 * Manejo de estado y contexto (AuthContext)
+* CRaCO (para personalizar la configuración de Create React App)
+* Tailwind CSS (Framework CSS utility-first)
+* PostCSS y Autoprefixer (Procesamiento de CSS)
 
 ## Requisitos Previos
 
@@ -60,7 +73,7 @@ Sigue estos pasos para configurar el proyecto localmente:
 1.  **Clona el repositorio:**
     ```bash
     git clone [URL_DEL_TU_REPOSITORIO]
-    cd document-signer-app
+    cd digital-document-signer-app # Asume el nombre de la carpeta de tu proyecto
     ```
     *(Reemplaza `[URL_DEL_TU_REPOSITORIO]` con la URL real de tu repositorio en GitHub u otro servicio).*
 
@@ -73,12 +86,9 @@ Sigue estos pasos para configurar el proyecto localmente:
 
 ## Cómo Ejecutar
 
-Una vez instaladas las dependencias, puedes iniciar la aplicación:
+Una vez instaladas las dependencias, puedes iniciar la aplicación en modo de desarrollo:
 
 ```bash
-npm run dev
+npm start
 # o si usas yarn
-# yarn dev
-# o si tu setup usa create-react-app (menos probable con Vite/@):
-# npm start 
-# o yarn start
+# yarn start
