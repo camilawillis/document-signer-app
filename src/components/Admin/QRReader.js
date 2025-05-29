@@ -223,32 +223,15 @@ export default function QRScannerPage() {
             </div>
 
             {showCamera && (
-              <>
-                <div className="flex justify-center mb-4">
-                  <QrScanner
-                    delay={300}
-                    style={{ height: 240, width: 320 }}
-                    onError={handleError}
-                    onScan={handleScan}
-                  />
-                </div>
-                
-                <div className="text-center text-gray-700 mb-2">
-                Apunta la cámara hacia el código QR para escanearlo.
-                </div>
-
-                <div className="flex justify-center mb-6">
-                  <Button 
-                    onClick={() => setShowCamera(false)} 
-                    variant="destructive" 
-                    className="bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </>
+              <div className="flex justify-center mb-6">
+                <QrScanner
+                  delay={300}
+                  style={{ height: 240, width: 320 }}
+                  onError={handleError}
+                  onScan={handleScan}
+                />
+              </div>
             )}
-
 
             {result && (
               <div className="bg-green-50 p-4 rounded-lg text-sm text-green-800 mt-4">
@@ -311,4 +294,3 @@ export default function QRScannerPage() {
     </div>
   );
 }
-
