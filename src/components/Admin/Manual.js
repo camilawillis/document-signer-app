@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, FileSignature, ShieldAlert, QrCode, Info, 
-  LogIn, ClipboardList, Trash2, User, Shield, FileText, Hash, CheckCircle2, History 
+  LogIn, ClipboardList, Trash2, User, Shield, FileText, Hash, CheckCircle2, History, Camera, UploadCloud // UploadCloud se usará ahora
 } from 'lucide-react';
 import Button from '@/components/ui/button';
 
@@ -77,7 +77,7 @@ export default function Manual() {
           <section className="mb-10">
             <div className="flex items-center gap-3 mb-6 border-b pb-4">
               <FileSignature className="text-green-600" size={28} />
-              <h2 className="text-2xl font-semibold">Proceso de Firma</h2>
+              <h2 className="text-2xl font-semibold">Proceso de Firma y Sellado de Documentos con QR</h2>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -87,11 +87,13 @@ export default function Manual() {
                     <FileText size={20} />
                     Pantalla de Firma
                   </h3>
+                  {/* Se recomienda una imagen actualizada que muestre el QR draggable */}
                   <img src="imagenes/firmar.png" alt="Interfaz de firma" className="mb-4 rounded-lg shadow" />
                   <div className="space-y-2 text-sm">
                     <p>➊ <strong>Estadísticas:</strong> Muestra documentos firmados y tipos más usados</p>
                     <p>➋ <strong>Selector de archivos:</strong> Formatos permitidos: PDF (hasta 10MB)</p>
-                    <p>➌ <strong>Tipos de documento:</strong> 
+                    <p>➌ <strong>Posicionamiento del QR:</strong> Tras cargar el PDF, podrás arrastrar una imagen de código QR sobre la previsualización del documento para definir su posición final antes de firmar.</p>
+                    <p>➍ <strong>Tipos de documento:</strong> 
                       <ul className="list-disc pl-6 mt-1">
                         <li>Acta de Matrimonio</li>
                         <li>Acta de Nacimiento</li>
@@ -106,7 +108,7 @@ export default function Manual() {
               <div className="bg-green-50 p-6 rounded-lg">
                 <h3 className="font-medium mb-4 flex items-center gap-2">
                   <Hash size={20} />
-                  Detalles Técnicos
+                  Detalles Técnicos y Proceso de Incrustación
                 </h3>
                 <div className="space-y-4">
                   <div className="bg-white p-4 rounded-md shadow">
@@ -114,7 +116,7 @@ export default function Manual() {
                     <div className="mt-1 grid grid-cols-2 gap-2">
                       <span className="bg-gray-100 px-2 py-1 rounded text-xs">Tipo</span>
                       <span className="text-xs">RSA-PSS</span>
-                      <span className="bg-gray-100 px-2 py-1 rounded text-xs">Longitud</span>
+                      <span className="text-xs">Longitud</span>
                       <span className="text-xs">4096 bits</span>
                       <span className="bg-gray-100 px-2 py-1 rounded text-xs">Hash</span>
                       <span className="text-xs">SHA-512</span>
@@ -122,24 +124,31 @@ export default function Manual() {
                   </div>
 
                   <div className="bg-white p-4 rounded-md shadow">
-                    <p className="text-sm"><strong>Proceso Automático:</strong></p>
+                    <p className="text-sm"><strong>Proceso Automático al Firmar:</strong></p>
                     <ol className="list-decimal pl-6 mt-1 space-y-2 text-xs">
-                      <li>Generación de hash SHA-256 del PDF</li>
-                      <li>Firma digital con clave privada</li>
-                      <li>Guardado en historial local</li>
-                      <li>Generación de código QR del hash</li>
+                      <li>Generación de hash SHA-256 del PDF original.</li>
+                      <li>Generación de una imagen de código QR con el hash del documento.</li>
+                      <li>Incrustación de esta imagen QR directamente en la primera página del PDF, en la posición que el usuario arrastró en la interfaz.</li>
+                      <li>Firma digital del hash del documento con la clave privada del usuario.</li>
+                      <li>Guardado del PDF modificado (con QR incrustado) y la información de la firma en el historial local.</li>
                     </ol>
+                    <div className="mt-4 bg-blue-100 p-3 rounded-md">
+                      <p className="flex items-center gap-2 text-blue-800 text-xs">
+                        <Info size={14} />
+                        El PDF resultante puede ser impreso para llevar el QR de verificación en el documento físico.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* SECCIÓN 3: VERIFICACIÓN */}
+          {/* SECCIÓN 3: VERIFICACIÓN DE FIRMAS DE DOCUMENTOS EN HISTORIAL */}
           <section className="mb-10">
             <div className="flex items-center gap-3 mb-6 border-b pb-4">
               <CheckCircle2 className="text-purple-600" size={28} />
-              <h2 className="text-2xl font-semibold">Verificación de Firmas en Historial</h2>
+              <h2 className="text-2xl font-semibold">Verificación de Firmas de Documentos en Historial</h2>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -186,11 +195,62 @@ export default function Manual() {
             </div>
           </section>
 
-          {/* SECCIÓN 4: HISTORIAL */}
+          {/* NUEVA SECCIÓN 4: VERIFICACIÓN MEDIANTE ESCANEO QR */}
+          <section className="mb-10">
+            <div className="flex items-center gap-3 mb-6 border-b pb-4">
+              <QrCode className="text-blue-600" size={28} /> {/* O el color que desees */}
+              <h2 className="text-2xl font-semibold">Verificación de Documentos Mediante Escaneo QR</h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h3 className="font-medium mb-4 flex items-center gap-2">
+                  <Camera size={20} />
+                  Opciones de Escaneo
+                </h3>
+                <div className="space-y-4 text-sm">
+                  <p>Esta funcionalidad te permite verificar la autenticidad de un documento físico o digital que contenga un código QR de firma.</p>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li><strong className="flex items-center gap-1"><Camera size={16} /> Escaneo con Cámara:</strong> Usa la cámara de tu dispositivo para leer el QR directamente desde un documento impreso.</li>
+                    <li><strong className="flex items-center gap-1"><UploadCloud size={16} /> Subir Imagen de QR:</strong> Sube una imagen (JPEG, PNG) que contenga un código QR (ej. una captura de pantalla).</li>
+                    <li><strong className="flex items-center gap-1"><FileText size={16} /> Escanear QR en PDF:</strong> Carga un archivo PDF; la aplicación escaneará automáticamente las páginas para buscar y leer códigos QR.</li>
+                  </ul>
+                  <div className="mt-4 bg-blue-100 p-3 rounded-md">
+                    <p className="flex items-center gap-2 text-blue-800 text-xs">
+                      <Info size={14} />
+                      El sistema buscará el hash extraído del QR en tu historial de firmas local para verificar la coincidencia.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 className="font-medium mb-4 flex items-center gap-2">
+                  <CheckCircle2 size={20} />
+                  Resultados de Verificación
+                </h3>
+                {/* Si tienes una imagen para el QR Scanner, úsala aquí */}
+                {/* <img src="/imagenes/qr_scanner_result.png" alt="Resultado de escaneo QR" className="mb-4 rounded-lg shadow" /> */}
+                <div className="space-y-2 text-sm">
+                  <p>Una vez escaneado el código QR, la aplicación buscará el hash correspondiente en tu historial de documentos firmados:</p>
+                  <p>✅ <strong>Documento Encontrado y Válido:</strong> Si el hash coincide con una entrada en tu historial y la firma es válida, se mostrará un mensaje de éxito con los detalles del documento (nombre, firmante, fecha).</p>
+                  <p>❌ <strong>Documento No Encontrado / Inválido:</strong> Si el hash no se encuentra en tu historial local o la firma es inválida, se te notificará que la verificación falló.</p>
+                  <div className="mt-4 bg-yellow-50 p-4 rounded-md">
+                    <p className="flex items-center gap-2">
+                      <ShieldAlert size={16} />
+                      <strong>Importante:</strong> Esta verificación depende del historial local del navegador. Para una verificación oficial completa, el historial debería estar en una base de datos centralizada.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* LA ANTIGUA SECCIÓN 4 AHORA ES SECCIÓN 5: HISTORIAL */}
           <section>
             <div className="flex items-center gap-3 mb-6 border-b pb-4">
               <History className="text-orange-600" size={28} />
-              <h2 className="text-2xl font-semibold">Gestión de Historial</h2>
+              <h2 className="text-2xl font-semibold">Gestión de Historial de Documentos</h2>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
