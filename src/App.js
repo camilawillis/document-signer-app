@@ -8,7 +8,6 @@ import HistorialFirmas from '@/components/Admin/HistorialFirmas';
 import RouteGuard from '@/components/Auth/RouteGuard';
 import Manual from '@/components/Admin/Manual';
 import QRReader from '@/components/Admin/QRReader';
-
 export default function App() {
   return (
     <Router>
