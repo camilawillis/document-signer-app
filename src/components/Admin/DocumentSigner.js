@@ -7,9 +7,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { saveAs } from 'file-saver';
 import { PDFDocument } from 'pdf-lib';
-import { getDocument } from "pdfjs-dist";
 import QRCode from 'qrcode';
-import "pdfjs-dist/build/pdf.worker.entry";
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+pdfjsLib.GlobalWorkerOptions.workerSrc = 
+  require('pdfjs-dist/legacy/build/pdf.worker.entry.js');
 
 const DOCUMENT_TYPES = [
     { id: 'acta-matrimonio', name: 'Acta de Matrimonio' },
@@ -143,7 +144,7 @@ export default function DocumentSigner() {
         if (pdfUrl) {
             const renderPdf = async () => {
                 try {
-                    const loadingTask = getDocument(pdfUrl);
+                    const loadingTask = pdfjsLib.getDocument(pdfUrl);
                     const pdf = await loadingTask.promise;
                     const page = await pdf.getPage(1);
 
