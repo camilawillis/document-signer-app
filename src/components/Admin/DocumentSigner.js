@@ -16,6 +16,7 @@ const DOCUMENT_TYPES = [
     { id: 'acta-matrimonio', name: 'Acta de Matrimonio' },
     { id: 'acta-nacimiento', name: 'Acta de Nacimiento' },
     { id: 'identificacion', name: 'Identificación Oficial' },
+    { id: 'certificado-matrimonio', name: 'Certificado de Matrimonio' },
     { id: 'otros', name: 'Otros Documentos' }
 ];
 
