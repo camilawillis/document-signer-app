@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { UploadCloud, CheckCircle, ArrowLeft, Key, FileText, PieChart } from 'lucide-react';
 import Card from '@/components/ui/card';
 import { CardContent } from '@/components/ui/card';
@@ -6,6 +6,10 @@ import Button from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { saveAs } from 'file-saver';
+import { PDFDocument } from 'pdf-lib';
+import { getDocument } from "pdfjs-dist";
+import QRCode from 'qrcode';
+import "pdfjs-dist/build/pdf.worker.entry";
 
 const DOCUMENT_TYPES = [
     { id: 'acta-matrimonio', name: 'Acta de Matrimonio' },
@@ -25,108 +29,139 @@ export default function DocumentSigner() {
     const [selectedSignature, setSelectedSignature] = useState(null);
     const { usuario } = useAuth();
     const navigate = useNavigate();
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [qrPosition, setQrPosition] = useState({ x: 100, y: 100 });
+    const [dragging, setDragging] = useState(false);
+    const [pdfUrl, setPdfUrl] = useState(null);
+    const canvasRef = useRef(null);
+    const qrRef = useRef(null);
+    const offset = useRef({ x: 0, y: 0 });
     
     const puedeFirmar = usuario.rol === 'firmante' || usuario.rol === 'administrador';
 
-    useEffect(() => {
-        const initializeApp = async () => {
-            try {
-                if (window.isSecureContext === false && window.location.hostname !== 'localhost') {
-                    throw new Error('Se requiere HTTPS o localhost para las operaciones criptográficas');
-                }
+    const initializeApp = useCallback(async () => {
+    try {
+        if (window.isSecureContext === false && window.location.hostname !== 'localhost') {
+            throw new Error('Se requiere HTTPS o localhost para las operaciones criptográficas');
+        }
 
-                const userKey = `userKeyPair_${usuario.email}`;
-                const storedKeys = localStorage.getItem(userKey);
+        const userKey = `userKeyPair_${usuario.email}`;
+        const storedKeys = localStorage.getItem(userKey);
+        
+        if (storedKeys) {
+            try {
+                const { publicKeyJwk, privateKeyJwk } = JSON.parse(storedKeys);
                 
-                if (storedKeys) {
-                    try {
-                        const { publicKeyJwk, privateKeyJwk } = JSON.parse(storedKeys);
-                        
-                        const [publicKey, privateKey] = await Promise.all([
-                            window.crypto.subtle.importKey(
-                                'jwk',
-                                publicKeyJwk,
-                                { name: 'RSA-PSS', hash: 'SHA-512' },
-                                true,
-                                ['verify']
-                            ),
-                            window.crypto.subtle.importKey(
-                                'jwk',
-                                privateKeyJwk,
-                                { name: 'RSA-PSS', hash: 'SHA-512' },
-                                true,
-                                ['sign']
-                            )
-                        ]);
-                        
-                        setPublicKey(publicKey);
-                        setPrivateKey(privateKey);
-                    } catch (importError) {
-                        console.warn('Error importando claves guardadas, generando nuevas', importError);
-                        throw new Error('regenerar');
-                    }
-                } else {
-                    throw new Error('regenerar');
-                }
-            } catch (error) {
-                if (error.message === 'regenerar') {
-                    try {
-                        const newKeyPair = await window.crypto.subtle.generateKey(
-                            {
-                                name: 'RSA-PSS',
-                                modulusLength: 4096,
-                                publicExponent: new Uint8Array([1, 0, 1]),
-                                hash: 'SHA-512',
-                            },
-                            true,
-                            ['sign', 'verify']
-                        );
-
-                        const [publicKeyJwk, privateKeyJwk] = await Promise.all([
-                            window.crypto.subtle.exportKey('jwk', newKeyPair.publicKey),
-                            window.crypto.subtle.exportKey('jwk', newKeyPair.privateKey)
-                        ]);
-
-                        localStorage.setItem(`userKeyPair_${usuario.email}`, JSON.stringify({
-                            publicKeyJwk,
-                            privateKeyJwk
-                        }));
-
-                        setPublicKey(newKeyPair.publicKey);
-                        setPrivateKey(newKeyPair.privateKey);
-                    } catch (genError) {
-                        console.error('Error generando claves:', genError);
-                        setStatus({ 
-                            message: 'Error inicializando el sistema criptográfico', 
-                            type: 'error' 
-                        });
-                        return;
-                    }
-                } else {
-                    console.error('Error inicializando:', error);
-                    setStatus({ 
-                        message: error.message || 'Error inicializando el sistema', 
-                        type: 'error' 
-                    });
-                    return;
-                }
+                const [publicKey, privateKey] = await Promise.all([
+                    window.crypto.subtle.importKey(
+                        'jwk',
+                        publicKeyJwk,
+                        { name: 'RSA-PSS', hash: 'SHA-512' },
+                        true,
+                        ['verify']
+                    ),
+                    window.crypto.subtle.importKey(
+                        'jwk',
+                        privateKeyJwk,
+                        { name: 'RSA-PSS', hash: 'SHA-512' },
+                        true,
+                        ['sign']
+                    )
+                ]);
+                
+                setPublicKey(publicKey);
+                setPrivateKey(privateKey);
+            } catch (importError) {
+                console.warn('Error importando claves guardadas, generando nuevas', importError);
+                throw new Error('regenerar');
             }
-
+        } else {
+            throw new Error('regenerar');
+        }
+    } catch (error) {
+        if (error.message === 'regenerar') {
             try {
-                loadHistory();
-                calculateStats();
-                setStatus({ message: 'Sistema listo', type: 'success' });
-            } catch (loadError) {
-                console.error('Error cargando historial:', loadError);
+                const newKeyPair = await window.crypto.subtle.generateKey(
+                    {
+                        name: 'RSA-PSS',
+                        modulusLength: 4096,
+                        publicExponent: new Uint8Array([1, 0, 1]),
+                        hash: 'SHA-512',
+                    },
+                    true,
+                    ['sign', 'verify']
+                );
+
+                const [publicKeyJwk, privateKeyJwk] = await Promise.all([
+                    window.crypto.subtle.exportKey('jwk', newKeyPair.publicKey),
+                    window.crypto.subtle.exportKey('jwk', newKeyPair.privateKey)
+                ]);
+
+                localStorage.setItem(`userKeyPair_${usuario.email}`, JSON.stringify({
+                    publicKeyJwk,
+                    privateKeyJwk
+                }));
+
+                setPublicKey(newKeyPair.publicKey);
+                setPrivateKey(newKeyPair.privateKey);
+            } catch (genError) {
+                console.error('Error generando claves:', genError);
                 setStatus({ 
-                    message: 'Aún no hay documentos firmados', 
+                    message: 'Error inicializando el sistema criptográfico', 
                     type: 'error' 
                 });
+                return;
             }
-        };
-    
+        } else {
+            console.error('Error inicializando:', error);
+            setStatus({ 
+                message: error.message || 'Error inicializando el sistema', 
+                type: 'error' 
+            });
+            return;
+        }
+    }
+
+    try {
+        loadHistory();
+        calculateStats();
+        setStatus({ message: 'Sistema listo', type: 'success' });
+    } catch (loadError) {
+        console.error('Error cargando historial:', loadError);
+        setStatus({ 
+            message: 'Aún no hay documentos firmados', 
+            type: 'error' 
+        });
+    }
+    }, [usuario.email]); // 👈 aquí va el dependency correcto
+
+    useEffect(() => {
         initializeApp();
-    }, [usuario.email]);
+    }, [initializeApp]);
+
+    useEffect(() => {
+        if (pdfUrl) {
+            const renderPdf = async () => {
+                try {
+                    const loadingTask = getDocument(pdfUrl);
+                    const pdf = await loadingTask.promise;
+                    const page = await pdf.getPage(1);
+
+                    const canvas = canvasRef.current;
+                    const context = canvas.getContext("2d");
+
+                    const viewport = page.getViewport({ scale: 1 });
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    await page.render({ canvasContext: context, viewport }).promise;
+                } catch (error) {
+                    console.error('Error al renderizar el PDF:', error);
+                }
+            };
+            renderPdf();
+        }
+    }, [pdfUrl]);
 
     const loadHistory = () => {
         const storedHistory = JSON.parse(localStorage.getItem('documentHistory') || '[]');
@@ -150,31 +185,31 @@ export default function DocumentSigner() {
         };
         setStats(stats);
     };
-
-    const handleFileUpload = async (file) => {
+    
+    const handleFileUpload = async (file, qrPosition) => {
         if (!puedeFirmar) {
             setStatus({ message: 'No tienes permisos para firmar documentos', type: 'error' });
             return;
         }
 
-        if (file.size > 10 * 1024 * 1024) {
+        if (!file || file.size > 10 * 1024 * 1024) {
             setStatus({ message: 'El archivo es demasiado grande (máx. 10MB)', type: 'error' });
             return;
         }
 
         try {
             setStatus({ message: 'Firmando documento...', type: 'loading' });
-            
+
             const arrayBuffer = await file.arrayBuffer();
             const hashBuffer = await window.crypto.subtle.digest('SHA-256', arrayBuffer);
             const fileHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-            
+
             const signature = await window.crypto.subtle.sign(
                 { name: "RSA-PSS", saltLength: 128 },
                 privateKey,
                 hashBuffer
-              );
-            
+            );
+
             const signatureHex = Array.from(new Uint8Array(signature))
                 .map(b => b.toString(16).padStart(2, '0'))
                 .join('');
@@ -192,21 +227,71 @@ export default function DocumentSigner() {
                 fileUrl: URL.createObjectURL(new Blob([arrayBuffer], { type: 'application/pdf' }))
             };
 
+
+            const pngImageBytes = await new Promise((resolve, reject) => {
+                QRCode.toDataURL(fileHash, { width: 200 }, (err, url) => {
+                    if (err) return reject(err);
+                    fetch(url)
+                        .then(res => res.arrayBuffer())
+                        .then(resolve)
+                        .catch(reject);
+                });
+            });
+
+            const url = newEntry.fileUrl;
+            const existingPdfBytes = await fetch(url).then(res => res.arrayBuffer());
+            const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+            const pngImage = await pdfDoc.embedPng(pngImageBytes);
+            const pngDims = pngImage.scale(0.5);
+
+            const pages = pdfDoc.getPages();
+            const firstPage = pages[0];
+
+            const canvas = canvasRef.current;
+            const { width: pdfWidth, height: pdfHeight } = firstPage.getSize();
+
+            // Escalamos posición del QR a coordenadas del PDF
+            const scaleX = pdfWidth / canvas.width;
+            const scaleY = pdfHeight / canvas.height;
+
+            // Invertimos el eje Y porque el PDF tiene el origen abajo
+            const pdfX = qrPosition.x * scaleX;
+            const pdfY = pdfHeight - (qrPosition.y * scaleY + pngDims.height); // Considera la altura del QR
+
+            firstPage.drawImage(pngImage, {
+                x: pdfX,
+                y: pdfY,
+                width: pngDims.width,
+                height: pngDims.height,
+            });
+
+
+            const pdfBytes = await pdfDoc.save();
+
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const modifiedFileUrl = URL.createObjectURL(blob);
+
+            newEntry.fileUrl = modifiedFileUrl;
+
             const updatedHistory = [newEntry, ...JSON.parse(localStorage.getItem('documentHistory') || '[]')];
             localStorage.setItem('documentHistory', JSON.stringify(updatedHistory));
-            
+
             loadHistory();
             calculateStats();
-            setStatus({ 
-                message: `Documento ${file.name} firmado exitosamente`, 
-                type: 'success' 
+
+            setStatus({
+                message: `Documento ${file.name} firmado exitosamente`,
+                type: 'success'
             });
-            
+
         } catch (error) {
             console.error('Error firmando documento:', error);
             setStatus({ message: 'Error en el proceso de firma', type: 'error' });
         }
     };
+
+
 
     const verifySignature = async (entry) => {
         try {
@@ -244,16 +329,17 @@ export default function DocumentSigner() {
 
     const handlePreview = async (entry) => {
         try {
-            const isValid = await verifySignature(entry);
+            const isValid = await verifySignature(entry); // Esperamos la promesa correctamente
             setSelectedSignature({
                 ...entry,
-                isValid
+                isValid // Valor booleano, no promesa
             });
         } catch (error) {
             console.error('Error generando vista previa:', error);
             setStatus({ message: 'Error al generar vista previa', type: 'error' });
         }
     };
+
 
     const exportPublicKey = async () => {
         if (!publicKey) return null;
@@ -326,6 +412,7 @@ export default function DocumentSigner() {
             minute: '2-digit'
         });
     };
+
 
     return (
         <div className="flex flex-col items-center gap-6 p-6">
@@ -415,10 +502,12 @@ export default function DocumentSigner() {
                             </select>
                         </div>
                         
-                        <div className="text-center w-full">
-                            <p className="text-gray-600 mb-4">
-                                Sube un documento PDF para firmarlo digitalmente
+                        <div className="w-full">
+                            <p className="text-gray-600 mb-4 text-center">
+                                Sube un documento PDF y arrastra el código QR donde lo quieras colocar
                             </p>
+
+                            {/* Input de archivo */}
                             <label className="flex flex-col items-center gap-3 cursor-pointer p-8 border-2 border-dashed border-blue-300 rounded-xl hover:bg-blue-50 transition-colors">
                                 <UploadCloud size={48} className="text-blue-500" />
                                 <span className="font-medium text-blue-600">Seleccionar archivo PDF</span>
@@ -427,15 +516,108 @@ export default function DocumentSigner() {
                                     type="file" 
                                     className="hidden" 
                                     accept=".pdf" 
-                                    onChange={(e) => {
+                                    onChange={async (e) => {
                                         const file = e.target.files?.[0];
                                         if (file) {
-                                            handleFileUpload(file);
+                                            if (file.type !== 'application/pdf') {
+                                                setStatus({ message: 'El archivo debe ser un PDF', type: 'error' });
+                                                return;
+                                            }
+                                            if (file.size > 10 * 1024 * 1024) {
+                                                setStatus({ message: 'El archivo es demasiado grande (máx. 10MB)', type: 'error' });
+                                                return;
+                                            }
+                                            setSelectedFile(file);
+                                            const url = URL.createObjectURL(file);
+                                            setPdfUrl(url);
                                         }
-                                    }} 
+                                    }}
                                 />
                             </label>
+                            {/* Vista previa PDF con QR movible */}
+                            {pdfUrl && (
+                            <div
+                                className="relative mt-4 w-full overflow-auto"
+                                style={{ maxHeight: '600px', padding: 0, margin: 0, border: 'none', position: 'relative' }}
+                                onMouseMove={(e) => {
+                                if (!dragging) return;
+                                const canvas = canvasRef.current;
+                                const rect = canvas.getBoundingClientRect();
+
+                                // Calcula posición sin que se salga del canvas (100 = tamaño QR)
+                                let newX = e.clientX - rect.left - offset.current.x;
+                                let newY = e.clientY - rect.top - offset.current.y;
+
+                                // Limita el QR para que no se salga del canvas
+                                newX = Math.max(0, Math.min(newX, canvas.width - 100));
+                                newY = Math.max(0, Math.min(newY, canvas.height - 100));
+
+                                setQrPosition({
+                                    x: newX,
+                                    y: newY,
+                                });
+                                }}
+                                onMouseUp={() => setDragging(false)}
+                            >
+                                <canvas ref={canvasRef} />
+
+                                <img
+                                ref={qrRef}
+                                src={`https://api.qrserver.com/v1/create-qr-code/?data=qr-preview&size=100x100`}
+                                alt="QR"
+                                draggable={false}
+                                onMouseDown={(e) => {
+                                    setDragging(true);
+                                    const rect = e.target.getBoundingClientRect();
+                                    offset.current = {
+                                    x: e.clientX - rect.left,
+                                    y: e.clientY - rect.top,
+                                    };
+                                }}
+                                style={{
+                                    position: "absolute",
+                                    top: qrPosition.y,
+                                    left: qrPosition.x,
+                                    width: 100,
+                                    height: 100,
+                                    cursor: "move",
+                                    zIndex: 10,
+                                }}
+                                />
+                            </div>
+                            )}
+
+
+                            <p className="text-sm text-gray-500">
+                            selectedFile: {selectedFile ? selectedFile.name : 'ninguno'}
+                            </p>
+
+                            {/* Botón de firmar */}
+                            {selectedFile && (
+                                
+                                <div className="text-center mt-6 flex justify-center gap-4">
+                                    <Button 
+                                    onClick={() => handleFileUpload(selectedFile, qrPosition)} 
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+                                    >
+                                    Firmar Documento
+                                    </Button>
+
+                                    <Button
+                                    onClick={() => {
+                                        setSelectedFile(null);
+                                        setPdfUrl(null);
+                                        setQrPosition({ x: 0, y: 0 }); // opcional: reinicia la posición del QR
+                                        setStatus({ message: 'Firma cancelada.', type: 'default' });
+                                    }}
+                                    className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg"
+                                    >
+                                    Cancelar
+                                    </Button>
+                                </div>
+                            )}
                         </div>
+
 
                         <div className={`w-full p-4 rounded-lg text-center ${
                             status.type === 'error' ? 'bg-red-100 text-red-700' :
@@ -569,6 +751,7 @@ export default function DocumentSigner() {
                             <p className="text-gray-900">{selectedSignature.signedBy}</p>
                         </div>
                     </div>
+
                     
                     <div className="flex flex-col items-center mb-4">
                         <h4 className="font-medium text-gray-700 mb-2" >Hash del Documento (QR):</h4>
