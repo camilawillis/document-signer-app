@@ -7,16 +7,17 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { saveAs } from 'file-saver';
 import { PDFDocument } from 'pdf-lib';
+import { getDocument } from "pdfjs-dist";
 import QRCode from 'qrcode';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 pdfjsLib.GlobalWorkerOptions.workerSrc = 
-  require('pdfjs-dist/legacy/build/pdf.worker.entry.js');
+  `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
 
 const DOCUMENT_TYPES = [
     { id: 'acta-matrimonio', name: 'Acta de Matrimonio' },
     { id: 'acta-nacimiento', name: 'Acta de Nacimiento' },
     { id: 'identificacion', name: 'Identificación Oficial' },
-    { id: 'certificado-matrimonio', name: 'Certificado de Matrimonio' },
     { id: 'otros', name: 'Otros Documentos' }
 ];
 
@@ -145,7 +146,7 @@ export default function DocumentSigner() {
         if (pdfUrl) {
             const renderPdf = async () => {
                 try {
-                    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+                    const loadingTask = getDocument(pdfUrl);
                     const pdf = await loadingTask.promise;
                     const page = await pdf.getPage(1);
 
@@ -219,7 +220,7 @@ export default function DocumentSigner() {
             const newEntry = {
                 fileName: file.name,
                 timestamp: Date.now(),
-                type: documentType,
+                expiration: Date.now() + (365 * 24 * 60 * 60 * 1000)/2, // 6 meses
                 status: "Firmado y verificado",
                 signature: signatureHex,
                 size: (file.size / 1024).toFixed(2) + ' KB',
@@ -734,6 +735,18 @@ export default function DocumentSigner() {
                         <div>
                             <h4 className="font-medium text-gray-700 mb-1">Fecha:</h4>
                             <p className="text-gray-900">{formatDate(selectedSignature.timestamp)}</p>
+                        </div>
+                        <div>
+                            <h4 className="font-medium text-gray-700 mb-1">Expiración:</h4>
+                            <p className="text-gray-900">
+                                {selectedSignature.expiration 
+                                    ? new Date(selectedSignature.expiration).toLocaleDateString('es-MX', {
+                                        year: 'numeric', 
+                                        month: 'short', 
+                                        day: 'numeric'
+                                    }) 
+                                    : 'No especificada'}
+                            </p>
                         </div>
                         <div>
                             <h4 className="font-medium text-gray-700 mb-1">Tipo:</h4>
