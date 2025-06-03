@@ -104,6 +104,7 @@ export default function QRScannerPage() {
         fileName: match.fileName,
         signedBy: match.signedBy,
         timestamp: match.timestamp,
+        expiration: match.expiration,
       });
       setShowCamera(false); // cerrar cámara después del escaneo
     } catch (err) {
@@ -223,15 +224,32 @@ export default function QRScannerPage() {
             </div>
 
             {showCamera && (
-              <div className="flex justify-center mb-6">
-                <QrScanner
-                  delay={300}
-                  style={{ height: 240, width: 320 }}
-                  onError={handleError}
-                  onScan={handleScan}
-                />
-              </div>
+              <>
+                <div className="flex justify-center mb-4">
+                  <QrScanner
+                    delay={300}
+                    style={{ height: 240, width: 320 }}
+                    onError={handleError}
+                    onScan={handleScan}
+                  />
+                </div>
+                
+                <div className="text-center text-gray-700 mb-2">
+                Apunta la cámara hacia el código QR para escanearlo.
+                </div>
+
+                <div className="flex justify-center mb-6">
+                  <Button 
+                    onClick={() => setShowCamera(false)} 
+                    variant="destructive" 
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </>
             )}
+
 
             {result && (
               <div className="bg-green-50 p-4 rounded-lg text-sm text-green-800 mt-4">
@@ -263,6 +281,7 @@ export default function QRScannerPage() {
                 <div><strong>Documento:</strong> {matchInfo.fileName}</div>
                 <div><strong>Firmado por:</strong> {matchInfo.signedBy || 'N/A'}</div>
                 <div><strong>Fecha:</strong> {new Date(matchInfo.timestamp).toLocaleString()}</div>
+                <div><strong>Fecha de expiración:</strong> {new Date(matchInfo.expiration).toLocaleDateString()}</div>
                 <Button
                   size="sm"
                   onClick={() => {

@@ -260,6 +260,18 @@ export default function HistorialFirmas() {
                                     <p className="text-gray-900">{formatDate(selectedSignature.timestamp)}</p>
                                 </div>
                                 <div>
+                                    <h4 className="font-medium text-gray-700 mb-1">Expiración:</h4>
+                                    <p className="text-gray-900">
+                                        {selectedSignature.expiration 
+                                            ? new Date(selectedSignature.expiration).toLocaleDateString('es-MX', {
+                                                year: 'numeric', 
+                                                month: 'short', 
+                                                day: 'numeric'
+                                            }) 
+                                            : 'No especificada'}
+                                    </p>
+                                </div>
+                                <div>
                                     <h4 className="font-medium text-gray-700 mb-1">Firmado por:</h4>
                                     <p className="text-gray-900">{selectedSignature.signedBy}</p>
                                 </div>
