@@ -13,11 +13,12 @@ import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 pdfjsLib.GlobalWorkerOptions.workerSrc = 
   `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
-
+  
 const DOCUMENT_TYPES = [
     { id: 'acta-matrimonio', name: 'Acta de Matrimonio' },
     { id: 'acta-nacimiento', name: 'Acta de Nacimiento' },
     { id: 'identificacion', name: 'Identificación Oficial' },
+    { id: 'comprobante-matrimonio', name: 'Comprobante de Matrimonio' },
     { id: 'otros', name: 'Otros Documentos' }
 ];
 
@@ -39,6 +40,7 @@ export default function DocumentSigner() {
     const canvasRef = useRef(null);
     const qrRef = useRef(null);
     const offset = useRef({ x: 0, y: 0 });
+    const [isSigned, setIsSigned] = useState(false);
     
     const puedeFirmar = usuario.rol === 'firmante' || usuario.rol === 'administrador';
 
@@ -287,6 +289,8 @@ export default function DocumentSigner() {
                 message: `Documento ${file.name} firmado exitosamente`,
                 type: 'success'
             });
+        
+        setIsSigned(true);
 
         } catch (error) {
             console.error('Error firmando documento:', error);
@@ -520,6 +524,7 @@ export default function DocumentSigner() {
                                     className="hidden" 
                                     accept=".pdf" 
                                     onChange={async (e) => {
+                                        setIsSigned(false);
                                         const file = e.target.files?.[0];
                                         if (file) {
                                             if (file.type !== 'application/pdf') {
@@ -538,7 +543,7 @@ export default function DocumentSigner() {
                                 />
                             </label>
                             {/* Vista previa PDF con QR movible */}
-                            {pdfUrl && (
+                            {pdfUrl && !isSigned && (
                             <div
                                 className="relative mt-4 w-full overflow-auto"
                                 style={{ maxHeight: '600px', padding: 0, margin: 0, border: 'none', position: 'relative' }}
@@ -596,7 +601,7 @@ export default function DocumentSigner() {
                             </p>
 
                             {/* Botón de firmar */}
-                            {selectedFile && (
+                            {selectedFile && !isSigned && (
                                 
                                 <div className="text-center mt-6 flex justify-center gap-4">
                                     <Button 
