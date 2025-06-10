@@ -3,41 +3,34 @@
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Web Crypto API](https://img.shields.io/badge/Web%20Crypto%20API-30A3DC?style=for-the-badge&logo=webcomponents&logoColor=white)
-![Node.js](https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 
 ## Descripción
 
-Aplicación web desarrollada como una demostración funcional para la firma y verificación digital de documentos, diseñada para simular un entorno operativo en instituciones como el DIF. Utiliza la Web Crypto API nativa del navegador para gestionar pares de claves criptográficas y realizar operaciones de firma y verificación, asegurando la integridad y autenticidad de los documentos.
+Aplicación web para firmar y verificar documentos digitalmente utilizando la Web Crypto API del navegador. Permite a los usuarios generar pares de claves (pública/privada), firmar documentos PDF con su clave privada y verificar esas firmas usando la clave pública correspondiente. Las claves y el historial de documentos firmados se almacenan localmente en el navegador.
 
-Este proyecto empodera al personal con las siguientes capacidades clave:
-* **Firma de Documentos Digitales:** Genera y utiliza claves propias para firmar documentos PDF.
-* **Incrustación de Códigos QR:** Permite incrustar un código QR con el hash del documento directamente en el PDF firmado, facilitando su impresión y verificación posterior.
-* **Historial Local:** Mantiene un registro persistente de todas las firmas realizadas.
-* **Verificación Versátil:** Ofrece métodos para verificar la autenticidad de documentos tanto digitales (a través del historial) como físicos (mediante el escaneo de códigos QR).
-
-El proyecto demuestra el uso de criptografía del lado del cliente (en el navegador) con el algoritmo RSA-PSS (SHA-512) para la firma y verificación digital, y expande su utilidad al integrar los documentos físicos en el proceso de verificación.
+Este proyecto es una demostración del uso de criptografía en el lado del cliente (browser) con RSA-PSS (SHA-512) para la firma digital.
 
 ## Características
 
-* **Generación de Claves:** Crea automáticamente un par de claves RSA-PSS (4096-bit, SHA-512) en el navegador para cada usuario autenticado, gestionando su ciclo de vida y almacenamiento local.
-* **Firma de Documentos con Incrustación de QR:** Permite cargar un archivo PDF, calcular su hash, firmarlo digitalmente con la clave privada generada localmente y, crucialmente, **incrustar un código QR con el hash del documento directamente en una posición seleccionable por el usuario dentro del PDF**. Esto facilita la impresión y posterior verificación del documento físico.
-* **Verificación de Firma (en Historial):** Permite verificar la autenticidad de una firma digital asociada a un documento almacenado en el historial local, utilizando la clave pública del firmante y comparando el hash original.
-* **Lector de Código QR para Verificación de Documentos Físicos:** Proporciona una interfaz para escanear códigos QR desde diversas fuentes (cámara web, imagen local o archivo PDF). El hash extraído del QR se utiliza para buscar y verificar la veracidad del documento correspondiente en el historial local.
+* **Generación de Claves:** Crea automáticamente un par de claves RSA-PSS (4096-bit, SHA-512) en el navegador para cada usuario (basado en el contexto de autenticación).
+* **Firma de Documentos:** Permite cargar un archivo PDF y firmarlo digitalmente utilizando la clave privada generada localmente.
+* **Verificación de Firma:** Verifica la autenticidad de una firma digital asociada a un documento (basado en el hash del contenido), utilizando la clave pública del firmante.
 * **Gestión de Claves:**
-    * Exporta la clave pública local en formato PEM para compartirla con terceros.
+    * Exporta la clave pública local en formato PEM.
     * Importa claves públicas de terceros (en formato PEM) para verificar sus firmas.
-* **Historial Local:** Mantiene un registro persistente y detallado de los documentos firmados (nombre, fecha, tamaño, firmante, hash, firma, clave pública y URL del documento modificado) en el `localStorage` del navegador, con funciones de búsqueda y filtrado.
-* **Estadísticas:** Muestra un resumen básico de la actividad de firma en el panel principal para una visión rápida del uso.
-* **Previsualización Detallada:** Permite ver los metadatos completos de un documento firmado, incluyendo su hash, la firma digital, la clave pública asociada y un código QR del hash para facilitar la verificación externa.
-* **Manual de Usuario Integrado:** Incluye una sección de manual de usuario detallada dentro de la aplicación con información sobre el acceso, los procesos de firma, la incrustación de QR, la verificación y consideraciones de seguridad.
-* **Control Básico de Roles:** Integrado con un contexto `useAuth` para simular permisos de usuario ('Administrador' y 'Firmante').
+* **Historial Local:** Mantiene un registro de los documentos firmados y sus detalles (nombre, fecha, tamaño, firmante, hash, firma, clave pública) en el `localStorage` del navegador.
+* **Estadísticas:** Muestra un resumen básico de la actividad de firma.
+* **Previsualización:** Permite ver los detalles de un documento firmado, incluyendo su hash, la firma digital y la clave pública asociada, facilitando la verificación.
+* **QR del Hash:** Genera un código QR que contiene el hash del documento para fácil identificación o vinculación.
+* **Control Básico de Roles:** Integrado con un contexto `useAuth` para determinar si un usuario tiene permisos de 'firmante'.
 
 ## Nota Importante de Seguridad
 
 **Este proyecto es una demostración y NO es adecuado para almacenar claves privadas sensibles ni para uso en producción donde la seguridad y persistencia de las claves sean críticas.**
 
 * Las claves privadas y el historial de documentos se almacenan **únicamente** en el `localStorage` del navegador.
-* El `localStorage` no es un mecanismo de almacenamiento seguro para claves privadas; es vulnerable a ataques XSS y la información se pierde si el usuario limpia los datos del navegador o cambia de dispositivo.
+* El `localStorage` no es un mecanismo de almacenamiento seguro para claves privadas; es vulnerable a ataques XSS y la información se pierde si el usuario limpia los datos del navegador.
 * Para una aplicación de firma digital robusta y segura, las claves privadas deben ser gestionadas en entornos seguros como módulos de seguridad de hardware (HSMs), smart cards o keystores seguros del sistema operativo, y el historial debe ser persistente en una base de datos segura en el servidor.
 
 ## Tecnologías Utilizadas
@@ -48,17 +41,9 @@ El proyecto demuestra el uso de criptografía del lado del cliente (en el navega
 * [Lucide React](https://lucide.dev/icons/) (Iconos)
 * [React Router DOM](https://reactrouter.com/en/main) (Navegación)
 * [FileSaver.js](https://github.com/eligrey/FileSaver.js/) (Guardar archivos en el cliente)
-* [react-qr-scanner](https://www.npmjs.com/package/react-qr-scanner) (Lectura de QR con cámara)
-* [jsQR](https://www.npmjs.com/package/jsqr) (Detección de QR en imágenes)
-* [pdfjs-dist](https://mozilla.github.io/pdf.js/) (Renderizado de PDF para previsualización y escaneo de QR en PDF)
-* **[pdf-lib](https://pdf-lib.js.org/)** (Para modificar y incrustar elementos en archivos PDF)
-* **[qrcode](https://www.npmjs.com/package/qrcode)** (Para generar códigos QR a partir de datos)
 * Componentes UI (basados en `@/components/ui/card`, `@/components/ui/button`, etc., presumiblemente de una librería como [Shadcn/UI](https://ui.shadcn.com/) o similar)
-* API externa para generación de QR: `https://api.qrserver.com/` (para QR de hash en la pantalla de previsualización y vista previa del arrastre del QR)
+* API externa para QR: `https://api.qrserver.com/`
 * Manejo de estado y contexto (AuthContext)
-* CRaCO (para personalizar la configuración de Create React App)
-* Tailwind CSS (Framework CSS utility-first)
-* PostCSS y Autoprefixer (Procesamiento de CSS)
 
 ## Requisitos Previos
 
@@ -75,9 +60,10 @@ Sigue estos pasos para configurar el proyecto localmente:
 
 1.  **Clona el repositorio:**
     ```bash
-    git clone [https://github.com/Johannacam/document-signer-app](https://github.com/Johannacam/document-signer-app) # URL del repositorio
-    cd document-signer-app # Nombre de la carpeta de tu proyecto
+    git clone [URL_DEL_TU_REPOSITORIO]
+    cd document-signer-app
     ```
+    *(Reemplaza `[URL_DEL_TU_REPOSITORIO]` con la URL real de tu repositorio en GitHub u otro servicio).*
 
 2.  **Instala las dependencias:**
     ```bash
@@ -88,9 +74,12 @@ Sigue estos pasos para configurar el proyecto localmente:
 
 ## Cómo Ejecutar
 
-Una vez instaladas las dependencias, puedes iniciar la aplicación en modo de desarrollo:
+Una vez instaladas las dependencias, puedes iniciar la aplicación:
 
 ```bash
-npm start
+npm run dev
 # o si usas yarn
-# yarn start
+# yarn dev
+# o si tu setup usa create-react-app (menos probable con Vite/@):
+# npm start 
+# o yarn start
