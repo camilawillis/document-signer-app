@@ -1,4 +1,3 @@
-import React from 'react';
 import { useState, useEffect } from 'react';
 import { Download, Trash2, FileText, Search, ArrowLeft } from 'lucide-react';
 import { saveAs } from 'file-saver';
@@ -174,7 +173,7 @@ export default function HistorialFirmas() {
 
             {filteredHistory.length > 0 ? (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="hidden md:grid md:grid-cols-12 bg-gray-50 p-4 border-b font-medium text-gray-600">
+                    <div className="grid grid-cols-12 bg-gray-50 p-4 border-b font-medium text-gray-600 hidden md:grid">
                         <div className="col-span-4 md:col-span-5">Documento</div>
                         <div className="col-span-3">Fecha</div>
                         <div className="col-span-2">Firmante</div>
@@ -259,6 +258,18 @@ export default function HistorialFirmas() {
                                 <div>
                                     <h4 className="font-medium text-gray-700 mb-1">Fecha:</h4>
                                     <p className="text-gray-900">{formatDate(selectedSignature.timestamp)}</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-medium text-gray-700 mb-1">Expiración:</h4>
+                                    <p className="text-gray-900">
+                                        {selectedSignature.expiration 
+                                            ? new Date(selectedSignature.expiration).toLocaleDateString('es-MX', {
+                                                year: 'numeric', 
+                                                month: 'short', 
+                                                day: 'numeric'
+                                            }) 
+                                            : 'No especificada'}
+                                    </p>
                                 </div>
                                 <div>
                                     <h4 className="font-medium text-gray-700 mb-1">Firmado por:</h4>

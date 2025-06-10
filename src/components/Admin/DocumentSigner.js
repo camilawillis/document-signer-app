@@ -15,6 +15,7 @@ const DOCUMENT_TYPES = [
     { id: 'acta-matrimonio', name: 'Acta de Matrimonio' },
     { id: 'acta-nacimiento', name: 'Acta de Nacimiento' },
     { id: 'identificacion', name: 'Identificación Oficial' },
+    { id: 'comprobante-matrimonio', name: 'Comprobante de Matrimonio' },
     { id: 'otros', name: 'Otros Documentos' }
 ];
 
@@ -36,6 +37,7 @@ export default function DocumentSigner() {
     const canvasRef = useRef(null);
     const qrRef = useRef(null);
     const offset = useRef({ x: 0, y: 0 });
+    const [isSigned, setIsSigned] = useState(false);
     
     const puedeFirmar = usuario.rol === 'firmante' || usuario.rol === 'administrador';
 
@@ -150,7 +152,7 @@ export default function DocumentSigner() {
                     const canvas = canvasRef.current;
                     const context = canvas.getContext("2d");
 
-                    const viewport = page.getViewport({ scale: 1.5 });
+                    const viewport = page.getViewport({ scale: 1 });
                     canvas.width = viewport.width;
                     canvas.height = viewport.height;
 
@@ -217,7 +219,7 @@ export default function DocumentSigner() {
             const newEntry = {
                 fileName: file.name,
                 timestamp: Date.now(),
-                type: documentType,
+                expiration: Date.now() + (365 * 24 * 60 * 60 * 1000)/2, // 6 meses
                 status: "Firmado y verificado",
                 signature: signatureHex,
                 size: (file.size / 1024).toFixed(2) + ' KB',
@@ -284,6 +286,8 @@ export default function DocumentSigner() {
                 message: `Documento ${file.name} firmado exitosamente`,
                 type: 'success'
             });
+        
+        setIsSigned(true);
 
         } catch (error) {
             console.error('Error firmando documento:', error);
@@ -517,6 +521,7 @@ export default function DocumentSigner() {
                                     className="hidden" 
                                     accept=".pdf" 
                                     onChange={async (e) => {
+                                        setIsSigned(false);
                                         const file = e.target.files?.[0];
                                         if (file) {
                                             if (file.type !== 'application/pdf') {
@@ -535,7 +540,7 @@ export default function DocumentSigner() {
                                 />
                             </label>
                             {/* Vista previa PDF con QR movible */}
-                            {pdfUrl && (
+                            {pdfUrl && !isSigned && (
                             <div
                                 className="relative mt-4 w-full overflow-auto"
                                 style={{ maxHeight: '600px', padding: 0, margin: 0, border: 'none', position: 'relative' }}
@@ -588,15 +593,31 @@ export default function DocumentSigner() {
                             )}
 
 
+                            <p className="text-sm text-gray-500">
+                            selectedFile: {selectedFile ? selectedFile.name : 'ninguno'}
+                            </p>
 
                             {/* Botón de firmar */}
-                            {selectedFile && (
-                                <div className="text-center mt-6">
+                            {selectedFile && !isSigned && (
+                                
+                                <div className="text-center mt-6 flex justify-center gap-4">
                                     <Button 
-                                        onClick={() => handleFileUpload(selectedFile, qrPosition)} 
-                                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+                                    onClick={() => handleFileUpload(selectedFile, qrPosition)} 
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
                                     >
-                                        Firmar Documento
+                                    Firmar Documento
+                                    </Button>
+
+                                    <Button
+                                    onClick={() => {
+                                        setSelectedFile(null);
+                                        setPdfUrl(null);
+                                        setQrPosition({ x: 0, y: 0 }); // opcional: reinicia la posición del QR
+                                        setStatus({ message: 'Firma cancelada.', type: 'default' });
+                                    }}
+                                    className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg"
+                                    >
+                                    Cancelar
                                     </Button>
                                 </div>
                             )}
@@ -716,6 +737,18 @@ export default function DocumentSigner() {
                         <div>
                             <h4 className="font-medium text-gray-700 mb-1">Fecha:</h4>
                             <p className="text-gray-900">{formatDate(selectedSignature.timestamp)}</p>
+                        </div>
+                        <div>
+                            <h4 className="font-medium text-gray-700 mb-1">Expiración:</h4>
+                            <p className="text-gray-900">
+                                {selectedSignature.expiration 
+                                    ? new Date(selectedSignature.expiration).toLocaleDateString('es-MX', {
+                                        year: 'numeric', 
+                                        month: 'short', 
+                                        day: 'numeric'
+                                    }) 
+                                    : 'No especificada'}
+                            </p>
                         </div>
                         <div>
                             <h4 className="font-medium text-gray-700 mb-1">Tipo:</h4>

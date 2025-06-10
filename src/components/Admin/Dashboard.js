@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -47,7 +46,8 @@ export default function Dashboard() {
             </Button>
 
             {/* Botón manual centrado debajo */}
-            <div className="col-span-2 flex justify-center mt-4">
+            <div className="col-span-2 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Nueva grid anidada */}
               <Button 
                 onClick={() => navigate('/manual')} 
                 className="h-32 flex flex-col items-center justify-center gap-3 hover:bg-blue-50 transition-colors"
@@ -58,14 +58,15 @@ export default function Dashboard() {
               </Button>
 
               <Button 
-              onClick={() => navigate('/qr')} 
-              className="h-32 flex flex-col items-center justify-center gap-3 hover:bg-blue-50 transition-colors"
-            >
-              <ScanQrCode size={36} className="text-blue-600" />
-              <span className="text-lg font-medium">Lector de QR</span>
-              <span className="text-sm text-gray-500">Comprueba la veracidad de documentos</span>
-            </Button>
+                onClick={() => navigate('/qr')} 
+                className="h-32 flex flex-col items-center justify-center gap-3 hover:bg-blue-50 transition-colors"
+              >
+                <ScanQrCode size={36} className="text-blue-600" />
+                <span className="text-lg font-medium">Lector de QR</span>
+                <span className="text-sm text-gray-500">Comprueba la veracidad de documentos</span>
+              </Button>
             </div>
+          </div>
           </div>
         </div>
       </main>
