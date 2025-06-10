@@ -2,6 +2,7 @@
   "name": "document-signer-app",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@next/font": "^14.2.15",
