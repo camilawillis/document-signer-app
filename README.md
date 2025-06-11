@@ -67,7 +67,11 @@ Antes de instalar y ejecutar este proyecto, asegúrate de tener instalado:
 * [Node.js](https://nodejs.org/) (versión 14 o superior recomendada)
 * [npm](https://www.npmjs.com/) o [yarn](https://yarnpkg.com/) (administrador de paquetes)
 * Un navegador web moderno que soporte la Web Crypto API.
-* **Importante:** Para que la Web Crypto API funcione correctamente, la aplicación debe ejecutarse bajo **HTTPS** o en **`localhost`**.
+* **Importante:** Para que la Web Crypto API funcione correctamente, la aplicación debe ejecutarse bajo **HTTPS** o en **`localhost`**. Además se debe ejecutar el comando
+  ```bash
+  npm install pdfjs-dist@3.11.174
+  ```
+  para tener la versión compatible de pdfjs-dist
 
 ## Configuración e Instalación
 
